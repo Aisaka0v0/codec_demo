@@ -192,7 +192,25 @@
             white-space: nowrap;
             position: sticky;
             top: 0;
+            z-index: 11;
+        }
+
+        /* Reference 列固定在左边 */
+        th:first-child, td:first-child {
+            position: sticky;
+            left: 0;
             z-index: 10;
+            background-color: var(--secondary-color);
+        }
+
+        td:first-child {
+            background-color: var(--card-background);
+            box-shadow: 2px 0 4px rgba(0,0,0,0.05);
+            z-index: 9;
+        }
+
+        th:first-child {
+            z-index: 12;
         }
 
         tr:last-child td {
@@ -383,22 +401,38 @@
         <script>
             // 定义数据集和样本
             const datasets = [
-                { prefix: 'audiocaps', count: 20, label: 'AudioCaps' },
-                { prefix: 'musdb', count: 20, label: 'MUSDB' },
-                { prefix: 'seedtts_en', count: 10, label: 'Seed TTS (English)' },
-                { prefix: 'seedtts_zh', count: 10, label: 'Seed TTS (Chinese)' }
+                { 
+                    prefix: 'audiocaps', 
+                    samples: [1, 17, 41, 43, 45],
+                    label: 'General Sound' 
+                },
+                { 
+                    prefix: 'musdb', 
+                    samples: [0, 1, 3, 5, 7],
+                    label: 'Music' 
+                },
+                { 
+                    prefix: 'seedtts_en', 
+                    samples: [0, 1, 2, 4, 9],
+                    label: 'English Speech' 
+                },
+                { 
+                    prefix: 'seedtts_zh', 
+                    samples: [0, 1, 2, 3, 6],
+                    label: 'Chinese Speech' 
+                }
             ];
 
-            // 列映射关系
+            // 列映射关系 - 按比特率排序
             const columnMapping = [
-                { label: 'Reference', suffix: '_ref', key: 'ref' },
-                { label: 'SemantiCodec-700bps', suffix: '_c5', key: 'c5' },
-                { label: 'UniCodec-1050bps', suffix: '_c6', key: 'c6' },
-                { label: 'WavTokenizer-500bps', suffix: '_c7', key: 'c7' },
-                { label: 'Ours-975bps', suffix: '_c1', key: 'c1' },
-                { label: 'Ours-575bps', suffix: '_c2', key: 'c2' },
-                { label: 'Ours-375bps', suffix: '_c4', key: 'c4' },
-                { label: 'Ours-275bps', suffix: '_c3', key: 'c3' }
+                { label: 'Reference', suffix: '_ref', key: 'ref', type: 'reference' },
+                { label: 'Ours-975bps', suffix: '_c1', key: 'c1', type: 'ours' },
+                { label: 'Ours-575bps', suffix: '_c2', key: 'c2', type: 'ours' },
+                { label: 'Ours-375bps', suffix: '_c4', key: 'c4', type: 'ours' },
+                { label: 'Ours-275bps', suffix: '_c3', key: 'c3', type: 'ours' },
+                { label: 'WavTokenizer-500bps', suffix: '_c7', key: 'c7', type: 'baseline' },
+                { label: 'UniCodec-1050bps', suffix: '_c6', key: 'c6', type: 'baseline' },
+                { label: 'SemantiCodec-700bps', suffix: '_c5', key: 'c5', type: 'baseline' }
             ];
 
             // 图片数据 - Fig.1, Fig.2, Fig.3
@@ -433,7 +467,7 @@
                     const thead = document.createElement('thead');
                     const headerRow = document.createElement('tr');
                     
-                    columnMapping.forEach(col => {
+                    columnMapping.forEach((col, idx) => {
                         const th = document.createElement('th');
                         th.textContent = col.label;
                         headerRow.appendChild(th);
@@ -445,12 +479,12 @@
                     // 表体
                     const tbody = document.createElement('tbody');
                     
-                    for (let i = 0; i < dataset.count; i++) {
+                    dataset.samples.forEach(sampleIdx => {
                         const row = document.createElement('tr');
                         
-                        columnMapping.forEach(col => {
+                        columnMapping.forEach((col, colIdx) => {
                             const td = document.createElement('td');
-                            const audioFile = `audio/${dataset.prefix}_${String(i).padStart(3, '0')}${col.suffix}.wav`;
+                            const audioFile = `audio/${dataset.prefix}_${String(sampleIdx).padStart(3, '0')}${col.suffix}.wav`;
                             
                             const audio = document.createElement('audio');
                             audio.controls = true;
@@ -461,11 +495,12 @@
                             
                             audio.appendChild(source);
                             td.appendChild(audio);
+                            
                             row.appendChild(td);
                         });
                         
                         tbody.appendChild(row);
-                    }
+                    });
                     
                     table.appendChild(tbody);
                     wrapper.appendChild(table);
